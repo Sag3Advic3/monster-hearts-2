@@ -1,5 +1,5 @@
 import { db, storage } from '../config/firebase.js';
-import { getDocs, collection, addDoc, doc, getDoc, deleteDoc, updateDoc, query, where } from "firebase/firestore";
+import { getDocs, collection, setDoc, doc, getDoc, deleteDoc, updateDoc, query, where } from "firebase/firestore";
 import { ref, uploadBytes, listAll } from 'firebase/storage';
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
@@ -8,7 +8,6 @@ const require = createRequire(import.meta.url);
 const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 
-// Create a new Discord client with message intent 
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -16,7 +15,6 @@ const client = new Client({
         GatewayIntentBits.MessageContent]
 });
 
-// Bot is ready 
 client.once('ready', () => {
     console.log(`🤖 Logged in as ${client.user.tag}`);
 });
@@ -27,7 +25,7 @@ client.on('messageCreate', message => {
     // Ignore messages from bots 
     if (message.author.bot) return;
 
-    // Respond to a specific message 
+    //Roll dice
     if (message.content.includes('!roll')) {
 
         const roll1 = Math.floor(Math.random() * 6) + 1;
@@ -38,21 +36,38 @@ client.on('messageCreate', message => {
             getPlayerData(message.author.id, "dark").then((dark) => {
                 message.reply(`${message.author}'s Dark Roll => ${roll1} + ${roll2} + (Dark) ${dark} = ${total + dark}`);
             })
-         } else if (message.content.includes('volatile')) {
+        } else if (message.content.includes('volatile')) {
             getPlayerData(message.author.id, "volatile").then((volatile) => {
                 message.reply(`${message.author}'s Volatile Roll => ${roll1} + ${roll2} + (Volatile) ${volatile} = ${total + volatile}`);
             })
-         } else if (message.content.includes('hot')) {
+        } else if (message.content.includes('hot')) {
             getPlayerData(message.author.id, "hot").then((hot) => {
                 message.reply(`${message.author}'s Hot Roll => ${roll1} + ${roll2} + (Hot) ${hot} = ${total + hot}`);
             })
-         } else if (message.content.includes('cold')) {
+        } else if (message.content.includes('cold')) {
             getPlayerData(message.author.id, "cold").then((cold) => {
                 message.reply(`${message.author}'s Cold Roll => ${roll1} + ${roll2} + (Cold) ${cold} = ${total + cold}`);
             })
-         } else {
-            message.reply(`${message.author.id}, please register your character before rolling with !register`);
+        } else {
+            message.reply(`${message.author}, please register your character before rolling with !register`);
 
+        }
+
+    }
+
+    if (message.content.includes('!register')) {
+        try {
+            //message should be formatted as "!register name hot cold volatile dark"
+            const messageData = message.content.split(" ");
+            if (messageData.length != 6) {
+                message.reply("Please format request as follows [!register name hot cold volatile dark]");
+            } else {
+                addPlayerData(message.author.id, messageData);
+                message.reply(`${message.author}, your data has been registered!`);
+            }
+        }
+        catch (error) {
+            console.error(error);
         }
 
     }
@@ -63,8 +78,8 @@ client.on('messageCreate', message => {
 client.login(process.env.DISCORD_TOKEN);
 
 const getPlayerData = async (author, skill) => {
-    const docRef = doc(db, "players", author);
-    const docSnap = await getDoc(docRef);
+    const playerDocRef = doc(db, "players", author);
+    const docSnap = await getDoc(playerDocRef);
 
     if (docSnap.exists()) {
         //console.log(docSnap.data());
@@ -73,8 +88,17 @@ const getPlayerData = async (author, skill) => {
 
     } else {
         console.log("No such document!");
-
-        //Add logic to add to database
         return null;
     }
+}
+
+const addPlayerData = async (author, message) => {
+    const playerDocRef = doc(db, "players", author);
+    await setDoc(playerDocRef, {
+        name: message[1],
+        hot: message[2],
+        cold: message[3],
+        volatile: message[4],
+        dark: message[5],
+    });
 }
