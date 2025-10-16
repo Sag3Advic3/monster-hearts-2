@@ -1,6 +1,6 @@
-# Project Title
+# Monster Hearts 2 Narrator
 
-Simple overview of use/purpose.
+A Discord bot for playing Monster Hearts 2.
 
 ## Description
 
@@ -8,33 +8,40 @@ An in-depth paragraph about your project and overview of use.
 
 ## Getting Started
 
-### Dependencies
-
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
-
 ### Installing
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+Invite Bot to your server using [this link](https://discord.com/oauth2/authorize?client_id=1426396377411354674)
 
 ### Executing program
 
-To run bot on local [node index.js]
+To run bot on local 
+```node index.js```
 
-## Help
+## Bot Commands
 
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+* !register
+    * Formatted ```!register name hot cold volatile dark```
+    * Ex. ```!register Sabrina 1 0 -1 2```
+    * Registers player data in Firebase
+* !roll
+    * Formatted ```!roll skill```
+    * Ex. ```!roll dark``` (Available options: hot, cold, volatile, & dark)
+    * Rolls 2d6 then adds skill modifier of user
+    * Note: will not work unless user is registered first
+
+### Planned Commands
+
+* !strings
+    * list all the strings registered to a specific user
+* !addString
+    * add a string for specific user
+    * to include the character said string is on and description
+* !useString
+    * spend a string and delete from Firebase
 
 ## Authors
 
-Contributors names and contact info
-
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
+[@Sag3Advice](https://github.com/Sag3Advic3)
 
 ## Version History
 
@@ -50,9 +57,5 @@ This project is licensed under the [NAME HERE] License - see the LICENSE.md file
 
 ## Acknowledgments
 
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+Based on the ttrpg Monster Hearts 2 by Avery Alder
+* [Monster Hearts 2](https://buriedwithoutceremony.com/monsterhearts)
