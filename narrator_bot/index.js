@@ -1,6 +1,5 @@
 import { db } from '../config/firebase.js';
-import { getDocs, collection, setDoc, doc, getDoc, deleteDoc, updateDoc, query, where } from "firebase/firestore";
-import { ref, uploadBytes, listAll } from 'firebase/storage';
+import { doc, getDoc } from "firebase/firestore";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
@@ -129,7 +128,6 @@ const getPlayerData = async (author, skill) => {
     const docSnap = await getDoc(playerDocRef);
 
     if (docSnap.exists()) {
-        //console.log(docSnap.data());
         const modifier = parseInt(docSnap.data()[skill]);
         return modifier;
 

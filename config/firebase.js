@@ -1,7 +1,3 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 import fs from 'fs';
 import admin from 'firebase-admin';
 
@@ -26,7 +22,4 @@ const firebaseConfig = {
 };
 
 const app = admin.initializeApp(firebaseConfig);
-//export const auth = getAuth(app);
-//export const googleProvider = new GoogleAuthProvider();
 export const db = admin.firestore();
-//export const storage = getStorage(app);
