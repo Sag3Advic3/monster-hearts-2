@@ -25,7 +25,7 @@ client.on('messageCreate', message => {
     if (message.author.bot) return;
 
     //Roll dice
-    if (message.content.includes('!roll')) {
+    if (message.content.startsWith('!roll')) {
 
         const roll1 = Math.floor(Math.random() * 6) + 1;
         const roll2 = Math.floor(Math.random() * 6) + 1;
@@ -66,7 +66,7 @@ client.on('messageCreate', message => {
     }
 
     //Register player stats
-    if (message.content.includes('!register')) {
+    if (message.content.startsWith('!register')) {
         try {
             //message should be formatted as "!register name hot cold volatile dark"
             const messageData = message.content.split(" ");
@@ -83,7 +83,7 @@ client.on('messageCreate', message => {
 
     }
 
-    if (message.content.includes('!addString')) {
+    if (message.content.startsWith('!addString')) {
         try {
             //message should be formatted as "!addString name description"
             const messageData = message.content.split(/\[|\]/);
@@ -102,7 +102,6 @@ client.on('messageCreate', message => {
     if (message.content == '!strings') {
         message.reply("Fetching your strings...");
         getStrings(message.author.id).then((strings) => {
-            console.log(strings);
             if (strings.length === 0) {
                 message.reply("You have no strings registered.");
             } else {
@@ -114,6 +113,40 @@ client.on('messageCreate', message => {
             }
 
         });
+    }
+
+    if(message.content.startsWith('!useString')) {
+        try {
+            //message should be formatted as "!deleteString stringId"
+            const messageData = message.content.split(" ");
+            if (messageData.length != 2) {
+                message.reply("Please format request as follows ``!deleteString stringId``");
+            } else {
+                const stringId = messageData[1];
+                const stringDocRef = db.collection("strings").doc(stringId);
+                stringDocRef.delete().then(() => {
+                    message.reply("String has been successfully deleted!");
+                }).catch((error) => {
+                    console.error("Error deleting string: ", error);
+                    message.reply("There was an error deleting the string. Please make sure the ID is correct.");
+                });
+            }
+        }
+        catch (error) {
+            console.error(error);
+        }
+    }
+
+    if (message.content.startsWith('!help')) {
+        const helpMessage = `
+        **Monster Hearts 2 Narrator Bot Commands:**
+        \`!roll [skill]\` - Roll dice for a specific skill (hot, cold, volatile, dark).
+        \`!register [name] [hot] [cold] [volatile] [dark]\` - Register your character's stats.
+        \`!addString [name] [description]\` - Add a new string to your character.
+        \`!strings\` - List all your registered strings.
+        \`!help\` - Display this help message.
+        `;
+        message.reply(helpMessage);
     }
 });
 
