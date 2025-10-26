@@ -28,9 +28,6 @@ To run bot on local
     * Ex. ```!roll dark``` (Available options: hot, cold, volatile, & dark)
     * Rolls 2d6 then adds skill modifier of user
     * Note: will not work unless user is registered first
-
-### Planned Commands
-
 * !strings
     * list all the strings registered to a specific user
 * !addString
@@ -38,6 +35,10 @@ To run bot on local
     * to include the character said string is on and description
 * !useString
     * spend a string and delete from Firebase
+
+### Planned Commands
+
+N/A
 
 ## Authors
 

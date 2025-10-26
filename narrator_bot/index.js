@@ -124,10 +124,10 @@ client.on('messageCreate', message => {
                 const stringId = messageData[1];
                 const stringDocRef = db.collection("strings").doc(stringId);
                 stringDocRef.delete().then(() => {
-                    message.reply("String has been successfully deleted!");
+                    message.reply("String has been successfully used!");
                 }).catch((error) => {
                     console.error("Error deleting string: ", error);
-                    message.reply("There was an error deleting the string. Please make sure the ID is correct.");
+                    message.reply("There was an error using the string. Please make sure the ID is correct.");
                 });
             }
         }
