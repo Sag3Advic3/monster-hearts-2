@@ -1,5 +1,4 @@
 import { db } from '../config/firebase.js';
-import { doc, getDoc } from "firebase/firestore";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
@@ -144,6 +143,7 @@ client.on('messageCreate', message => {
         \`!register [name] [hot] [cold] [volatile] [dark]\` - Register your character's stats.
         \`!addString [name] [description]\` - Add a new string to your character.
         \`!strings\` - List all your registered strings.
+        \`!useString [id]\` - Uses a string and removes it from your inventory.
         \`!help\` - Display this help message.
         `;
         message.reply(helpMessage);
@@ -157,15 +157,20 @@ client.login(process.env.DISCORD_TOKEN);
 //--- Helper functions ---
 
 const getPlayerData = async (author, skill) => {
-    const playerDocRef = doc(db, "players", author);
-    const docSnap = await getDoc(playerDocRef);
+    try {
+        const playerDocRef = db.collection("players").doc(author);
+        const docSnap = await playerDocRef.get();
 
-    if (docSnap.exists()) {
-        const modifier = parseInt(docSnap.data()[skill]);
-        return modifier;
-
-    } else {
-        console.log("No such document!");
+        if (docSnap.exists) {
+            const value = docSnap.data()[skill];
+            const modifier = parseInt(value, 10);
+            return isNaN(modifier) ? 0 : modifier;
+        } else {
+            console.log("No such document!");
+            return null;
+        }
+    } catch (err) {
+        console.error(err);
         return null;
     }
 }
