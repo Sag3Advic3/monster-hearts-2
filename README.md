@@ -31,9 +31,10 @@ To run bot on local
 * !strings
     * list all the strings registered to a specific user
 * !addString
+    * Formatted ```!addString [name] [description]```
     * add a string for specific user
-    * to include the character said string is on and description
 * !useString
+    * Formatted ```!useString id```
     * spend a string and delete from Firebase
 
 ### Planned Commands
