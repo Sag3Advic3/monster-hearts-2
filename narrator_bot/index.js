@@ -13,6 +13,8 @@ const client = new Client({
         GatewayIntentBits.MessageContent]
 });
 
+const orgRoleID = '1435687616778604555';
+
 client.once('clientReady', () => {
     console.log(`🤖 Logged in as ${client.user.tag}`);
 });
@@ -28,37 +30,46 @@ client.on('messageCreate', message => {
 
         const roll1 = Math.floor(Math.random() * 6) + 1;
         const roll2 = Math.floor(Math.random() * 6) + 1;
-        const total = roll1 + roll2;
+        let total = roll1 + roll2;
 
         try {
             //message should be formatted as "!roll skill"
             const messageData = message.content.split(" ");
-            if (messageData.length != 2) {
-                message.reply("Please format request as follows ``!roll skill``");
-            } else {
-                if (message.content.includes('dark')) {
-                    getPlayerData(message.author.id, "dark").then((dark) => {
-                        message.reply(`${message.author}'s Dark Roll => ${roll1} + ${roll2} + (Dark) ${dark} = ${total + dark}`);
-                    })
-                } else if (message.content.includes('volatile')) {
-                    getPlayerData(message.author.id, "volatile").then((volatile) => {
-                        message.reply(`${message.author}'s Volatile Roll => ${roll1} + ${roll2} + (Volatile) ${volatile} = ${total + volatile}`);
-                    })
-                } else if (message.content.includes('hot')) {
-                    getPlayerData(message.author.id, "hot").then((hot) => {
-                        message.reply(`${message.author}'s Hot Roll => ${roll1} + ${roll2} + (Hot) ${hot} = ${total + hot}`);
-                    })
-                } else if (message.content.includes('cold')) {
-                    getPlayerData(message.author.id, "cold").then((cold) => {
-                        message.reply(`${message.author}'s Cold Roll => ${roll1} + ${roll2} + (Cold) ${cold} = ${total + cold}`);
-                    })
-                } else {
-                    message.reply(`${message.author}, please register your character before rolling with !register`);
+            let msg = `${roll1} + ${roll2}`;
 
+
+            if (messageData.length < 2) {
+                message.reply("Please format request as follows ``!roll skill [hot/cold/volatile/dark] [optional modifier]``");
+            } else if (messageData[2] && isNaN(messageData[2])) {
+                message.reply("Please provide a valid number for the optional modifier.");
+            } else {
+                if (messageData.length == 3) {
+                    msg += ` + ${messageData[2]}`;
+                    total += parseInt(messageData[2], 10);
+                }
+
+                if (messageData[1] == 'dark') {
+                    console.log("Fetching dark stat");
+                    getPlayerData(message.author.id, "dark").then((dark) => {
+                        message.reply(msg + ` + (Dark) ${dark} = ${total + dark}`);
+                    })
+                } else if (messageData[1] == 'volatile') {
+                    getPlayerData(message.author.id, "volatile").then((volatile) => {
+                        message.reply(msg + ` + (Volatile) ${volatile} = ${total + volatile}`);
+                    })
+                } else if (messageData[1] == 'hot') {
+                    getPlayerData(message.author.id, "hot").then((hot) => {
+                        message.reply(msg + ` + (Hot) ${hot} = ${total + hot}`);
+                    })
+                } else if (messageData[1] == 'cold') {
+                    getPlayerData(message.author.id, "cold").then((cold) => {
+                        message.reply(msg + ` + (Cold) ${cold} = ${total + cold}`);
+                    })
                 }
             }
         }
         catch (error) {
+            message.reply(`<@&${orgRoleID}>, there was an error processing the roll command./n ${error}`);
             console.error(error);
         }
 
@@ -114,7 +125,7 @@ client.on('messageCreate', message => {
         });
     }
 
-    if(message.content.startsWith('!useString')) {
+    if (message.content.startsWith('!useString')) {
         try {
             //message should be formatted as "!deleteString stringId"
             const messageData = message.content.split(" ");
@@ -124,10 +135,10 @@ client.on('messageCreate', message => {
                 const stringId = messageData[1];
                 const stringDocRef = db.collection("strings").doc(stringId);
                 stringDocRef.delete().then(() => {
-                    message.reply("String has been successfully used!");
+                    message.reply(`String has been successfully used! <@&${orgRoleID}>`);
                 }).catch((error) => {
                     console.error("Error deleting string: ", error);
-                    message.reply("There was an error using the string. Please make sure the ID is correct.");
+                    message.reply(`<@&${orgRoleID}> There was an error using the string. Please make sure the ID is correct.`);
                 });
             }
         }
@@ -136,10 +147,10 @@ client.on('messageCreate', message => {
         }
     }
 
-    if (message.content.startsWith('!help')) {
+    if (message.content == '!help') {
         const helpMessage = `
         **Monster Hearts 2 Narrator Bot Commands:**
-        \`!roll [skill]\` - Roll dice for a specific skill (hot, cold, volatile, dark).
+        \`!roll [skill] [optional modifier]\` - Roll dice for a specific skill (hot, cold, volatile, dark).
         \`!register [name] [hot] [cold] [volatile] [dark]\` - Register your character's stats.
         \`!addString [name] [description]\` - Add a new string to your character.
         \`!strings\` - List all your registered strings.
