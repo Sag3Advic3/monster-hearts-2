@@ -4,7 +4,7 @@ A Discord bot for playing Monster Hearts 2.
 
 ## Description
 
-An in-depth paragraph about your project and overview of use.
+This is a bot to be hosted on a Discord server to aide in the gameplay of the ttrpg game, Monster Hearts 2. Below are the commands that this bot is capable of performing.
 
 ## Getting Started
 
@@ -52,10 +52,6 @@ N/A
     * See [commit change]() or See [release history]()
 * 0.1
     * Initial Release
-
-## License
-
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
 
 ## Acknowledgments
 
