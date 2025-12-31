@@ -13,14 +13,14 @@ const client = new Client({
         GatewayIntentBits.MessageContent]
 });
 
-const orgRoleID = '1435687616778604555';
+const orgRoleID = process.env.ORG_ROLE_ID;
 
 client.once('clientReady', () => {
     console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
 // Listen and respond to messages 
-client.on('messageCreate', message => {
+client.on('messageCreate', async message => {
 
     // Ignore messages from bots 
     if (message.author.bot) return;
@@ -34,9 +34,9 @@ client.on('messageCreate', message => {
 
         try {
             //message should be formatted as "!roll skill"
+            const channel = await client.channels.cache.get(process.env.CONSEQUENCES_CHANNEL_ID);
             const messageData = message.content.split(" ");
             let msg = `${roll1} + ${roll2}`;
-
 
             if (messageData.length < 2) {
                 message.reply("Please format request as follows ``!roll skill [hot/cold/volatile/dark] [optional modifier]``");
@@ -48,28 +48,43 @@ client.on('messageCreate', message => {
                     total += parseInt(messageData[2], 10);
                 }
 
-                if (messageData[1] == 'dark') {
-                    console.log("Fetching dark stat");
-                    getPlayerData(message.author.id, "dark").then((dark) => {
-                        message.reply(msg + ` + (Dark) ${dark} = ${total + dark}`);
-                    })
-                } else if (messageData[1] == 'volatile') {
-                    getPlayerData(message.author.id, "volatile").then((volatile) => {
-                        message.reply(msg + ` + (Volatile) ${volatile} = ${total + volatile}`);
-                    })
-                } else if (messageData[1] == 'hot') {
-                    getPlayerData(message.author.id, "hot").then((hot) => {
-                        message.reply(msg + ` + (Hot) ${hot} = ${total + hot}`);
-                    })
-                } else if (messageData[1] == 'cold') {
-                    getPlayerData(message.author.id, "cold").then((cold) => {
-                        message.reply(msg + ` + (Cold) ${cold} = ${total + cold}`);
-                    })
+                switch (messageData[1]) {
+                    case 'dark':
+                        getPlayerData(message.author.id, "dark").then(async (dark) => {
+                            total += dark;
+                            message.reply(msg + ` + (Dark) ${dark} = ${total}`);
+                            if (total <= 9) await channel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
+                        })
+                        break;
+                    case 'volatile':
+                        getPlayerData(message.author.id, "volatile").then(async (volatile) => {
+                            total += volatile;
+                            message.reply(msg + ` + (Volatile) ${volatile} = ${total}`);
+                            if (total <= 9) await channel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
+                        })
+                        break;
+                    case 'hot':
+                        getPlayerData(message.author.id, "hot").then(async (hot) => {
+                            total += hot;
+                            message.reply(msg + ` + (Hot) ${hot} = ${total}`);
+                            if (total <= 9) await channel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
+                        })
+                        break;
+                    case 'cold':
+                        getPlayerData(message.author.id, "cold").then(async (cold) => {
+                            total += cold;
+                            message.reply(msg + ` + (Cold) ${cold} = ${total}`);
+                            if (total <= 9) await channel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
+                        })
+                        break;
+                    default:
+                        message.reply("Please provide a valid skill: hot, cold, volatile, or dark.");
+                        return;
                 }
             }
         }
         catch (error) {
-            message.reply(`<@&${orgRoleID}>, there was an error processing the roll command./n ${error}`);
+            message.reply(`<@&${orgRoleID}>, there was an error processing the roll command.\n ${error}`);
             console.error(error);
         }
 
@@ -186,8 +201,8 @@ const getPlayerData = async (author, skill) => {
     }
 }
 
-const addPlayerData = async (author, message) => {
-    const playerDocRef = db.collection("players").doc(author);
+const addPlayerData = async (id, message) => {
+    const playerDocRef = db.collection("players").doc(id);
     await playerDocRef.set({
         name: message[1],
         hot: message[2],
