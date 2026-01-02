@@ -13,14 +13,15 @@ const client = new Client({
         GatewayIntentBits.MessageContent]
 });
 
-const orgRoleID = process.env.ORG_ROLE_ID;
-
 client.once('clientReady', () => {
     console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
 // Listen and respond to messages 
 client.on('messageCreate', async message => {
+
+    const consequencesChannel = await client.channels.cache.get(process.env.CONSEQUENCES_CHANNEL_ID);
+    const notifsChannel = await client.channels.cache.get(process.env.NOTIFS_CHANNEL_ID);
 
     // Ignore messages from bots 
     if (message.author.bot) return;
@@ -34,12 +35,12 @@ client.on('messageCreate', async message => {
 
         try {
             //message should be formatted as "!roll skill"
-            const channel = await client.channels.cache.get(process.env.CONSEQUENCES_CHANNEL_ID);
             const messageData = message.content.split(" ");
             let msg = `${roll1} + ${roll2}`;
 
             if (messageData.length < 2) {
-                message.reply("Please format request as follows ``!roll skill [hot/cold/volatile/dark] [optional modifier]``");
+                message.reply(msg + ` = ${total}`);
+                if (total <= 9) await consequencesChannel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
             } else if (messageData[2] && isNaN(messageData[2])) {
                 message.reply("Please provide a valid number for the optional modifier.");
             } else {
@@ -53,28 +54,28 @@ client.on('messageCreate', async message => {
                         getPlayerData(message.author.id, "dark").then(async (dark) => {
                             total += dark;
                             message.reply(msg + ` + (Dark) ${dark} = ${total}`);
-                            if (total <= 9) await channel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
+                            if (total <= 9) await consequencesChannel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
                         })
                         break;
                     case 'volatile':
                         getPlayerData(message.author.id, "volatile").then(async (volatile) => {
                             total += volatile;
                             message.reply(msg + ` + (Volatile) ${volatile} = ${total}`);
-                            if (total <= 9) await channel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
+                            if (total <= 9) await consequencesChannel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
                         })
                         break;
                     case 'hot':
                         getPlayerData(message.author.id, "hot").then(async (hot) => {
                             total += hot;
                             message.reply(msg + ` + (Hot) ${hot} = ${total}`);
-                            if (total <= 9) await channel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
+                            if (total <= 9) await consequencesChannel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
                         })
                         break;
                     case 'cold':
                         getPlayerData(message.author.id, "cold").then(async (cold) => {
                             total += cold;
                             message.reply(msg + ` + (Cold) ${cold} = ${total}`);
-                            if (total <= 9) await channel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
+                            if (total <= 9) await consequencesChannel.send(`${message.author.username} rolled a ${total}. Please assign a consequence to this roll.\n${message.url}`);
                         })
                         break;
                     default:
@@ -84,7 +85,8 @@ client.on('messageCreate', async message => {
             }
         }
         catch (error) {
-            message.reply(`<@&${orgRoleID}>, there was an error processing the roll command.\n ${error}`);
+            message.reply("There was an error processing the roll command. Mods have been notified.");
+            await notifsChannel.send(`Error processing roll: ${error}\n${message.url}`);
             console.error(error);
         }
 
@@ -104,6 +106,8 @@ client.on('messageCreate', async message => {
         }
         catch (error) {
             console.error(error);
+            message.reply("There was an error registering your data. Mods have been notified.");
+            await notifsChannel.send(`Error registering user: ${error}\n${message.url}`);
         }
 
     }
@@ -121,23 +125,32 @@ client.on('messageCreate', async message => {
         }
         catch (error) {
             console.error(error);
+            message.reply("There was an error adding this string. Mods have been notified.");
+            await notifsChannel.send(`Error adding a string: ${error}\n${message.url}`);
         }
     }
 
     if (message.content == '!strings') {
         message.reply("Fetching your strings...");
-        getStrings(message.author.id).then((strings) => {
-            if (strings.length === 0) {
-                message.reply("You have no strings registered.");
-            } else {
-                let response = "Your strings:\n";
-                strings.forEach((string, index) => {
-                    response += `${index + 1}. **${string.name}**: ${string.description} [${string.id}]\n`;
-                });
-                message.reply(response);
-            }
+        try {
+            getStrings(message.author.id).then((strings) => {
+                if (strings.length === 0) {
+                    message.reply("You have no strings registered.");
+                } else {
+                    let response = "Your strings:\n";
+                    strings.forEach((string, index) => {
+                        response += `${index + 1}. **${string.name}**: ${string.description} [${string.id}]\n`;
+                    });
+                    message.reply(response);
+                }
 
-        });
+            });
+        } catch (error) {
+            console.error("Error fetching strings: ", error);
+            message.reply(`There was an error using the string. Please make sure the ID is correct.`);
+            await notifsChannel.send(`Error fetching strings of user ${message.author.id}: ${error}\n${message.url}`);
+
+        }
     }
 
     if (message.content.startsWith('!useString')) {
@@ -149,11 +162,13 @@ client.on('messageCreate', async message => {
             } else {
                 const stringId = messageData[1];
                 const stringDocRef = db.collection("strings").doc(stringId);
-                stringDocRef.delete().then(() => {
-                    message.reply(`String has been successfully used! <@&${orgRoleID}>`);
-                }).catch((error) => {
+                stringDocRef.delete().then(async () => {
+                    message.reply(`String has been successfully used!`);
+                    await notifsChannel.send(`${message.author.username} spent a string.\n${message.url}`);
+                }).catch(async (error) => {
                     console.error("Error deleting string: ", error);
-                    message.reply(`<@&${orgRoleID}> There was an error using the string. Please make sure the ID is correct.`);
+                    message.reply(`There was an error using the string. Please make sure the ID is correct.`);
+                    await notifsChannel.send(`Error deleting string: ${error}\n${message.url}`);
                 });
             }
         }
