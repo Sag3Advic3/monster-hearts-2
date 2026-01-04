@@ -3,14 +3,19 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
 // Import required modules 
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Partials } = require('discord.js');
 require('dotenv').config();
 
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent]
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.MessageContent],
+    partials: [
+        Partials.Channel,
+        Partials.Message
+    ]
 });
 
 client.once('clientReady', () => {
@@ -22,9 +27,33 @@ client.on('messageCreate', async message => {
 
     const consequencesChannel = await client.channels.cache.get(process.env.CONSEQUENCES_CHANNEL_ID);
     const notifsChannel = await client.channels.cache.get(process.env.NOTIFS_CHANNEL_ID);
+    const rumorsChannel = await client.channels.cache.get(process.env.RUMORS_CHANNEL_ID);
+    const narrationChannel = await client.channels.cache.get(process.env.NARRATION_CHANNEL_ID);
 
     // Ignore messages from bots 
     if (message.author.bot) return;
+
+    // Forward DMs to notifs and rumors channels
+    if (!message.guild) {
+        await notifsChannel.send(`**${message.author.username}:** ${message.content}`);
+        await rumorsChannel.send(`${message.content}`);
+    }
+    
+    // Send narration messages to specified channel
+    if (message.channel.id == narrationChannel) {
+        try {
+            const messageData = message.content.split(" ");
+            const channelId = messageData[0].replace("<#", "").replace(">", "");
+
+            const messageContent = messageData.slice(1).join(" ");
+
+            await client.channels.cache.get(channelId).send(messageContent);
+            console.log(messageContent);
+        } catch (error) {
+            console.error("Error forwarding narration message: ", error);
+            message.reply("There was an error forwarding your narration. Please format the message as follows:\n`#channel message`");
+        }
+    }
 
     //Roll dice
     if (message.content.startsWith('!roll')) {
