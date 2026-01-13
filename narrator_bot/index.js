@@ -142,12 +142,13 @@ client.on('messageCreate', async message => {
             case '!addString':
                 try {
                     //message should be formatted as "!addString name description"
-                    const stringMessageData = message.content.split(/\[|\]/);
-                    if (!message.content.includes("[") || !message.content.includes("]") || stringMessageData.length != 5) {
-                        message.reply("Please format request as follows ``!addString [name] [description]``");
+                    const stringMessageData = message.content.split('"');
+                    const temp = stringMessageData[0].split(" ");
+                    if (stringMessageData.length != 3 || temp.length != 3) {
+                        message.reply('Please format request as follows ``!addString name "description"``');
                     } else {
-                        addString(message.author.id, stringMessageData[1], stringMessageData[3]);
-                        await notifsChannel.send(`${message.author.username} just added a string: ${stringMessageData[1]} - ${stringMessageData[3]}\n${message.url}`);
+                        addString(message.author.id, temp[1], stringMessageData[1]);
+                        await notifsChannel.send(`${message.author.username} just added a string: ${temp[1]} - ${stringMessageData[1]}\n${message.url}`);
                         message.reply("String has been successfully added!");
                     }
                 }
@@ -203,7 +204,7 @@ client.on('messageCreate', async message => {
                 break;
             case '!giveCondition':
                 const conditionMessageData = message.content.split('"');
-                message.reply("Mods have been nottified of the condition given.");
+                message.reply("Mods have been notified of the condition given.");
                 await conditionsChannel.send(`**Condition Given by ${message.author.username}:**\n${messageData[1]}: ${conditionMessageData[1]}`);
                 break;
             case '!help':
@@ -211,7 +212,7 @@ client.on('messageCreate', async message => {
                 **Monster Hearts 2 Narrator Bot Commands:**
                 \`!roll [skill] [optional modifier]\` - Roll dice for a specific skill (hot, cold, volatile, dark).
                 \`!register [name] [hot] [cold] [volatile] [dark]\` - Register your character's stats.
-                \`!addString [name] [description]\` - Add a new string to your character.
+                \`!addString name "description"\` - Add a new string to your character.
                 \`!strings\` - List all your registered strings.
                 \`!useString [id]\` - Uses a string and removes it from your inventory.
                 \`!giveCondition character "condition description"\` - Give a condition to a player.
